@@ -11,8 +11,8 @@ NOM Prénom, Établissement d’envoi, PAYS
 Le nom et le prénom sont dans le premier champ. Les mots entièrement en capitales forment le nom. Le premier mot qui ne l’est pas ouvre le prénom, y compris un prénom composé. `DE LA FONTAINE Jules` donne le nom `DE LA FONTAINE` et le prénom `Jules`. Si aucun mot n’est en capitales, le premier mot est le nom. Une ligne entièrement en capitales ne sépare pas le prénom. L’établissement et le pays suivent, séparés par des virgules. Le pays est le code ISO d’un pays du programme Erasmus+ en 2026 : les 27 États membres, `IS`, `LI`, `NO`, `MK`, `RS`, `TR`. La Grèce s’écrit `GR` ou `EL`. Le Royaume-Uni et la Suisse ne sont pas encore dans la liste.
 
 ```text
-KINDBEITER Luce-Elia, Lycée Bréquigny - Rennes, FR
-CZUJESZOWA Julia, UWM Olsztyn, PL
+MOREAU Camille, École supérieure d'art et de design de Reims, FR
+BERGSTRÖM Linnea, Konstfack — University of Arts, Crafts and Design, SE
 ```
 
 ## Minimum
@@ -20,13 +20,13 @@ CZUJESZOWA Julia, UWM Olsztyn, PL
 **Nom et prénom suffisent.**
 
 ```text
-PELLOIS Tom
+ALVES Duarte
 ```
 
 L’établissement et le pays sont alors vides. Une ligne avec l’établissement mais sans pays est valable :
 
 ```text
-PELLOIS Tom, Lycée Bréquigny - Rennes
+ALVES Duarte, Faculdade de Belas-Artes da Universidade de Lisboa
 ```
 
 Un seul mot est lu comme un nom, avec un prénom vide. Ce n’est pas une ligne utile : le certificat imprime le prénom.
@@ -39,10 +39,10 @@ Une ligne sans virgule qui contient `teacher`, `enseignant`, `prof` ou `professe
 
 ```text
 Students
-DENOUAL Martin, Lycée Bréquigny - Rennes, FR
+ROSSI Giulia, Accademia di Belle Arti di Brera, IT
 
 Enseignants
-PIOTROWICZ Marcin, UWM Olsztyn, PL
+VAN DIJK Noor, Gerrit Rietveld Academie, NL
 ```
 
 `Accompanying teachers`, `Profs` et `Professeurs` ont le même effet. La casse est ignorée.
