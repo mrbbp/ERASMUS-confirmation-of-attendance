@@ -9,6 +9,9 @@ L'outil est constitué de deux pages,
 - une page de configuration où l'on renseigne la première fois qu'on l'utilise les infos de l'établissement émetteur avec le logo, les IOD et le code erasmus de l'établissement et le nom du·de la proviseur·e (le·a responsable légal·e). Et une liste des étudiants avec leur établissement d'origine et leur pays, qui ont participé. Ces infos sont mémorisées dans le navigateur et dans le fichier de config qu'on télécharge en changeant de page.
 - une seconde page génère les certificats à partir des données collectées sur la première en Anglais et une copie pour archive en Français. il suffit d'imprimer (Command/Control + P) pour obtenir en pdf, les documents à faire signer par le·a chef·fe d'établissement.
 
+![interface de configuration](img/configuration-du-certificat-le-joli-bip-demo-web.png)
+![certificats avant impression](img/confirmation-of-attendance-le-joli-bip-demo-web.png)
+
 il faut héberger sur un serveur (en https://). Les technos ne fonctionnent pas en local (en file://).
 
 La liste du configurateur, contient les étudiants et les accompagnants, l'école et le pays, un tableau se construit à chaque ligne ajoutée dans le champs.On peut sélectionner le rôle (etudiant/enseignant) pour chaque personne.Le certificat n'est pas le même (en fonction du rôle), il octroie des ects aux étudiant et déclare la présence de l'enseignant comme accompagnant (pas d'octroie d'ects).On définit le type de projet (BIP ou Workshop) et le nombre d'ects est ajouté au certificat.Il semblerait que les infos légales nécessaires sont toutes présentes sur le doc (validé par un agent ia)
