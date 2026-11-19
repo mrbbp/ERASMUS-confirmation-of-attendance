@@ -9,10 +9,10 @@ La page de saisie fonctionne en `file://` pour ces champs. L’envoi d’un logo
 | Champ | Rôle |
 | --- | --- |
 | `lycee` | Nom du lycée, imprimé après « at » et « Headmaster of ». |
-| `logoLycee` | Chemin relatif du logo, depuis la page. Exemple : `medias/logo_breq.svg` ou `logo.php?f=` suivi du nom aléatoire. Pas d’adresse absolue, pas de `..`. |
+| `logoLycee` | Chemin relatif du logo, depuis la page. Exemple : `medias/logo.svg` ou `logo.php?f=` suivi du nom aléatoire. Pas d’adresse absolue, pas de `..`. |
 | `proviseur` | Nom imprimé avant « Headmaster of ». |
-| `codeErasmus` | Texte après « Erasmus code ». Exemple : `F RENNES64`. |
-| `oid` | Texte après « OID ». Exemple : `E10003340`. |
+| `codeErasmus` | Texte après « Erasmus code ». Exemple : `F GROLOU43`. |
+| `oid` | Texte après « OID ». Exemple : `E1234567`. |
 
 Les cinq champs sont des chaînes. `codeErasmus` et `oid` vides retirent la ligne du certificat.
 
