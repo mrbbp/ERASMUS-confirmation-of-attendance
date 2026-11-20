@@ -2,7 +2,7 @@
 Un outil en ligne pour générer les certificats de présence, pour les Blended Intensive Program (BIP) ou simple Workshop Erasmus.
 Parce que les fichiers Word moches, c'est non!
 
-On se prend le bec avec mon Eraie (sur l'obligation du Bilinguisme). Le document généré (pdf) est en anglais pour les étrangers, une copie en français pour archive est générée en fin de doc.
+On se prend le bec avec mon Eraei (sur l'obligation du Bilinguisme). Le document généré (pdf) est en anglais pour les étrangers, une copie en français pour archive est générée en fin de doc. Une nouvelle option permet de générer un certificat recto/verso bilingue (cf. Update).
 
 L'outil est constitué de deux pages,
 
