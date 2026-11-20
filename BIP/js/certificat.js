@@ -115,7 +115,12 @@
     }),
   );
 
+  const ORDRE_RECTO = "recto-verso";
+  const ORDRE_FIN = "vf-fin";
+  const ORDRE_KEY = "bip-ordre-langues";
   const form = document.querySelector("#json-form");
+  const ordreLangues = document.querySelector("#ordre-langues");
+  let configChargee = null;
   const jsonFile = document.querySelector("#json-file");
   const statut = document.querySelector("#statut");
   const main = document.querySelector("#certificats");
@@ -378,6 +383,30 @@
     };
   }
 
+  function ordreDepuisJson(raw) {
+    if (!isObject(raw)) {
+      return null;
+    }
+    if (raw.ordreLangues === ORDRE_FIN || raw.ordreLangues === ORDRE_RECTO) {
+      return raw.ordreLangues;
+    }
+    return null;
+  }
+
+  function stockerOrdre(valeur) {
+    const ordre = valeur === ORDRE_FIN ? ORDRE_FIN : ORDRE_RECTO;
+    ordreLangues.checked = ordre === ORDRE_FIN;
+    try {
+      localStorage.setItem(ORDRE_KEY, ordre);
+    } catch (error) {
+      statut.textContent = "Le navigateur refuse d’enregistrer l’ordre des langues.";
+    }
+  }
+
+  function ordreCourant() {
+    return ordreLangues.checked ? ORDRE_FIN : ORDRE_RECTO;
+  }
+
   function fill(node, selector, text) {
     const el = node.querySelector(selector);
     if (el) {
@@ -403,8 +432,8 @@
     fill(article, ".ects-entre", " et la formation a été ");
     fill(article, ".acheve", "suivie avec succès");
     fill(article, ".virtuelle-avant", "La composante virtuelle a eu lieu le ");
-    fill(article, ".signataire-fonction", ", proviseur du ");
-    fill(article, ".code-label", "Code Erasmus ");
+    article.querySelector(".signataire")?.remove();
+    article.querySelector(".codes")?.remove();
     const zones = article.querySelectorAll(".zone");
     zones[0]?.setAttribute("aria-label", "Cachet de l’établissement");
     zones[1]?.setAttribute("aria-label", "Signature");
@@ -446,11 +475,13 @@
     fillAll(article, ".etablissement", data.lycee);
     fillTime(article, ".date-debut", data.dateDebut, lang);
     fillTime(article, ".date-fin", data.dateFin, lang);
-    fill(article, ".proviseur", data.proviseur);
-    fill(article, ".code-erasmus", data.codeErasmus);
-    fill(article, ".oid", data.oid);
-    if (!data.codeErasmus && !data.oid) {
-      article.querySelector(".codes").remove();
+    if (!francais) {
+      fill(article, ".proviseur", data.proviseur);
+      fill(article, ".code-erasmus", data.codeErasmus);
+      fill(article, ".oid", data.oid);
+      if (!data.codeErasmus && !data.oid) {
+        article.querySelector(".codes")?.remove();
+      }
     }
 
     if (personne.role === "etudiant" && data.ects) {
@@ -563,23 +594,36 @@
   }
 
   function render(data) {
+    configChargee = data;
     const fragment = document.createDocumentFragment();
-    data.personnes.forEach((personne) => {
-      fragment.append(renderCertificat(data, personne, "en"));
-    });
-    data.personnes.forEach((personne) => {
-      fragment.append(renderCertificat(data, personne, "fr"));
-    });
+    const fin = ordreCourant() === ORDRE_FIN;
+    if (fin) {
+      data.personnes.forEach((personne) => {
+        fragment.append(renderCertificat(data, personne, "en"));
+      });
+      data.personnes.forEach((personne) => {
+        fragment.append(renderCertificat(data, personne, "fr"));
+      });
+    } else {
+      data.personnes.forEach((personne) => {
+        fragment.append(renderCertificat(data, personne, "en"));
+        fragment.append(renderCertificat(data, personne, "fr"));
+      });
+    }
 
     main.replaceChildren(fragment);
     genererPdf.hidden = depuisConfig;
     document.title = `Confirmation of attendance — ${data.bip}`;
     const n = data.personnes.length;
-    statut.textContent = `${n} certificat${n > 1 ? "s" : ""} — ${data.bip}, puis l’exemplaire pour archive`;
+    const ordre = fin
+      ? "Versions françaises en fin de document."
+      : "Anglais au recto, français au verso.";
+    statut.textContent = `${n} personne${n > 1 ? "s" : ""} — ${data.bip}. ${ordre}`;
     document.fonts.ready.then(alignBaselines);
   }
 
   function showEmpty(message) {
+    configChargee = null;
     const p = vide.cloneNode(true);
     p.id = "vide";
     p.textContent = message;
@@ -605,6 +649,10 @@
       try {
         const parsed = JSON.parse(String(reader.result));
         const data = normalizeConfig(parsed);
+        const ordre = ordreDepuisJson(parsed);
+        if (ordre) {
+          stockerOrdre(ordre);
+        }
         jsonFile.setCustomValidity("");
         render(data);
       } catch (error) {
@@ -662,6 +710,19 @@
     readJsonFile(file);
   });
 
+  try {
+    ordreLangues.checked = localStorage.getItem(ORDRE_KEY) === ORDRE_FIN;
+  } catch (error) {
+    ordreLangues.checked = false;
+  }
+
+  ordreLangues.addEventListener("change", () => {
+    stockerOrdre(ordreCourant());
+    if (configChargee) {
+      render(configChargee);
+    }
+  });
+
   const parametres = new URLSearchParams(window.location.search);
   if (parametres.has("reset")) {
     sessionStorage.removeItem("bip-certificat-config");
@@ -675,7 +736,12 @@
     const memorise = sessionStorage.getItem("bip-certificat-config");
     if (memorise) {
       try {
-        render(normalizeConfig(JSON.parse(memorise)));
+        const parsed = JSON.parse(memorise);
+        const ordre = ordreDepuisJson(parsed);
+        if (ordre) {
+          stockerOrdre(ordre);
+        }
+        render(normalizeConfig(parsed));
       } catch (error) {
         const message = error instanceof Error ? error.message : "JSON illisible.";
         form.hidden = false;

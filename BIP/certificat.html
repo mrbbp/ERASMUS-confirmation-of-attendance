@@ -16,10 +16,18 @@
     </button>
     <header class="toolbar" lang="fr">
       <h1>Certificats de présence</h1>
+      <div class="activite__switch ordre-langues">
+        <span id="ordre-recto">recto/verso bilingue</span>
+        <label class="activite__piste">
+          <input id="ordre-langues" name="ordreLangues" type="checkbox" role="switch" autocomplete="off" aria-labelledby="ordre-recto ordre-fin">
+          <span class="activite__gelule" aria-hidden="true"></span>
+        </label>
+        <span id="ordre-fin">Français en fin de document</span>
+      </div>
       <form class="json-form" id="json-form" action="#" method="get">
         <label for="json-file">Fichier JSON</label>
         <input id="json-file" name="json" type="file" accept="application/json,.json" required>
-        <p class="hint" id="json-help">Choisir le JSON téléchargé depuis la configuration, ou le déposer ici. Une page A4 par personne.</p>
+        <p class="hint" id="json-help">Choisir le JSON téléchargé depuis la configuration, ou le déposer ici. Deux pages A4 par personne.</p>
         <p class="status" id="statut" role="status">Aucun JSON chargé.</p>
       </form>
     </header>

@@ -144,6 +144,7 @@
                   <li>L’établissement d’envoi est facultatif.</li>
                   <li>Le pays est facultatif.</li>
                   <li>Le pays est le code ISO d’un pays du programme Erasmus+.</li>
+                  <li>À l’enregistrement, le JSON classe par établissement, enseignants puis étudiants, par nom.</li>
                   <li>Le Royaume-Uni et la Suisse ne sont pas encore dans la liste.</li>
                 </ol>
                 <h2>Rôle</h2>
@@ -161,6 +162,14 @@
 
         <div class="actions">
           <button type="submit">Générer les certificats</button>
+          <div class="activite__switch ordre-langues">
+            <span id="ordre-recto">recto/verso bilingue</span>
+            <label class="activite__piste">
+              <input id="ordre-langues" name="ordreLangues" type="checkbox" role="switch" autocomplete="off" aria-labelledby="ordre-recto ordre-fin">
+              <span class="activite__gelule" aria-hidden="true"></span>
+            </label>
+            <span id="ordre-fin">Français en fin de document</span>
+          </div>
           <p class="status" id="statut" role="status"></p>
         </div>
       </form>

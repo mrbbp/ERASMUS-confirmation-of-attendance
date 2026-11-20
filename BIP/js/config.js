@@ -132,6 +132,10 @@
     return personnes;
   }
 
+  const ORDRE_RECTO = "recto-verso";
+  const ORDRE_FIN = "vf-fin";
+  const ORDRE_KEY = "bip-ordre-langues";
+  const BIP_KEY = "bip-nom";
   const collator = new Intl.Collator("fr", { numeric: true, sensitivity: "base" });
   const columns = [
     ["nom", "Nom"],
@@ -303,6 +307,48 @@
     }
   }
 
+  function lireOrdreStocke() {
+    try {
+      return localStorage.getItem(ORDRE_KEY) === ORDRE_FIN ? ORDRE_FIN : ORDRE_RECTO;
+    } catch (error) {
+      return ORDRE_RECTO;
+    }
+  }
+
+  function stockerOrdre(valeur) {
+    const ordre = valeur === ORDRE_FIN ? ORDRE_FIN : ORDRE_RECTO;
+    form.ordreLangues.checked = ordre === ORDRE_FIN;
+    try {
+      localStorage.setItem(ORDRE_KEY, ordre);
+      return true;
+    } catch (error) {
+      statut.textContent = "Le navigateur refuse d’enregistrer l’ordre des langues.";
+      return false;
+    }
+  }
+
+  function trierPersonnes(personnes) {
+    return personnes.sort((a, b) => {
+      const ecoleA = a.etablissementEnvoi || "";
+      const ecoleB = b.etablissementEnvoi || "";
+      if (Boolean(ecoleA) !== Boolean(ecoleB)) {
+        return ecoleA ? -1 : 1;
+      }
+      const parEcole = collator.compare(ecoleA, ecoleB);
+      if (parEcole) {
+        return parEcole;
+      }
+      if (a.role !== b.role) {
+        return a.role === "enseignant" ? -1 : 1;
+      }
+      const parNom = collator.compare(a.nom, b.nom);
+      if (parNom) {
+        return parNom;
+      }
+      return collator.compare(a.prenom, b.prenom);
+    });
+  }
+
   function collectPersonnes() {
     return [...personnesBox.querySelectorAll("tbody tr")].map((row) => {
       const nom = row.querySelector('input[name^="nom-"]').value.trim();
@@ -397,7 +443,8 @@
       proviseur: form.proviseur.value.trim(),
       codeErasmus: form.codeErasmus.value.trim(),
       oid: form.oid.value.trim(),
-      personnes: collectPersonnes(),
+      ordreLangues: form.ordreLangues.checked ? ORDRE_FIN : ORDRE_RECTO,
+      personnes: trierPersonnes(collectPersonnes()),
     };
   }
 
@@ -430,19 +477,20 @@
     return `BIP-${slugBip(bip)}-config-${fileStamp(date)}.json`;
   }
 
-  function downloadJson(data, filename) {
-    const blob = new Blob([`${JSON.stringify(data, null, 2)}\n`], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
+  function remettreJson(text, filename) {
+    const url = URL.createObjectURL(new Blob([text], { type: "application/octet-stream" }));
     const link = document.createElement("a");
     link.href = url;
     link.download = filename;
-    link.hidden = true;
     document.body.append(link);
     link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    return new Promise((resolve) => {
+      window.setTimeout(() => {
+        link.remove();
+        URL.revokeObjectURL(url);
+        resolve();
+      }, 1500);
+    });
   }
 
   logoFileButton.addEventListener("click", () => {
@@ -512,6 +560,7 @@
 
       if (data.bip) {
         form.bip.value = data.bip;
+        stockerBip();
       }
       if (data.lycee) {
         form.lycee.value = data.lycee;
@@ -534,6 +583,9 @@
       form.format.checked = data.mentionBip === false;
       form.format.dispatchEvent(new Event("change"));
       form.ectsZero.checked = data.ects === null || data.ects === 0;
+      if (data.ordreLangues === ORDRE_FIN || data.ordreLangues === ORDRE_RECTO) {
+        stockerOrdre(data.ordreLangues);
+      }
 
       for (const [cle, input] of [
         ["dateDebut", dateDebut],
@@ -653,6 +705,24 @@
     }
   }
 
+  function lireBipStocke() {
+    try {
+      return localStorage.getItem(BIP_KEY) || "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function stockerBip() {
+    try {
+      localStorage.setItem(BIP_KEY, form.bip.value.trim());
+      return true;
+    } catch (error) {
+      statut.textContent = "Le navigateur refuse d’enregistrer le nom du BIP.";
+      return false;
+    }
+  }
+
   function stockerEtablissement() {
     afficherEtablissement();
     codeErasmus = form.codeErasmus.value.trim();
@@ -676,6 +746,8 @@
   if (reset) {
     sessionStorage.removeItem("bip-certificat-config");
     localStorage.removeItem("bip-etablissement");
+    localStorage.removeItem(BIP_KEY);
+    localStorage.removeItem(ORDRE_KEY);
     const url = new URL(window.location.href);
     url.searchParams.delete("reset");
     history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
@@ -705,6 +777,7 @@
   }
   form.codeErasmus.value = codeErasmus;
   form.oid.value = oid;
+  form.bip.value = lireBipStocke();
   afficherEtablissement();
   if ([form.lycee, form.logoLycee, form.proviseur, form.codeErasmus, form.oid].some((champ) => !champ.value.trim())) {
     etablissementForm.hidden = false;
@@ -746,6 +819,7 @@
 
   form.bip.addEventListener("input", () => {
     form.bip.setCustomValidity("");
+    stockerBip();
   });
 
   form.format.addEventListener("change", () => {
@@ -758,11 +832,15 @@
   form.format.checked = false;
   form.ectsZero.checked = false;
   form.format.dispatchEvent(new Event("change"));
+  form.ordreLangues.checked = lireOrdreStocke() === ORDRE_FIN;
+  form.ordreLangues.addEventListener("change", () => {
+    stockerOrdre(form.ordreLangues.checked ? ORDRE_FIN : ORDRE_RECTO);
+  });
 
   dateDebut.addEventListener("change", validateDates);
   dateFin.addEventListener("change", validateDates);
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     form.bip.setCustomValidity(form.bip.value.trim() ? "" : "Indiquez le nom.");
     for (const [champ, message] of [
@@ -784,14 +862,25 @@
     validatePersonnes();
 
     if (!form.reportValidity()) {
-      form.querySelector(":invalid")?.focus();
+      const invalide = form.querySelector(":invalid");
+      if (invalide) {
+        const bloc = invalide.closest("#etablissement-form");
+        if (bloc?.hidden) {
+          bloc.hidden = false;
+          etablissementModifier.setAttribute("aria-expanded", "true");
+          etablissementModifier.textContent = "";
+          etablissementModifier.setAttribute("aria-label", "Fermer");
+        }
+        invalide.scrollIntoView({ block: "center" });
+        invalide.focus();
+        statut.textContent = invalide.validationMessage;
+      }
       return;
     }
 
     submitButton.disabled = true;
     const data = buildPayload();
     const filename = configFilename(data.bip, new Date());
-    downloadJson(data, filename);
     try {
       sessionStorage.setItem("bip-certificat-config", JSON.stringify(data));
     } catch (error) {
@@ -799,9 +888,8 @@
       submitButton.disabled = false;
       return;
     }
-    window.setTimeout(() => {
-      window.location.assign("certificat.html?depuis=config");
-    }, 400);
+    await remettreJson(`${JSON.stringify(data, null, 2)}\n`, filename);
+    window.location.assign("certificat.html?depuis=config");
   });
 
   renderPersonnes(parseListe(listeField.value));

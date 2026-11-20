@@ -827,27 +827,29 @@ body[data-doc="config"] .activite {
   gap: 0.75rem 5rem;
 }
 
-body[data-doc="config"] .activite__switch {
+:is(body[data-doc="config"], body[data-doc="certificat"]) .activite__switch {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.55rem;
   font-family: Marianne, "Source Sans 3", sans-serif;
   font-weight: 500;
 }
 
-body[data-doc="config"] .activite__piste {
+:is(body[data-doc="config"], body[data-doc="certificat"]) .activite__piste {
   --gelule: 3.6rem;
   --gelule-h: 1.9rem;
   --bord: 2px;
   --marge: 2px;
   position: relative;
   display: block;
+  flex: 0 0 auto;
   width: var(--gelule);
   height: var(--gelule-h);
   cursor: pointer;
 }
 
-body[data-doc="config"] .activite__piste input {
+:is(body[data-doc="config"], body[data-doc="certificat"]) .activite__piste input {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -859,7 +861,7 @@ body[data-doc="config"] .activite__piste input {
   white-space: nowrap;
 }
 
-body[data-doc="config"] .activite__gelule {
+:is(body[data-doc="config"], body[data-doc="certificat"]) .activite__gelule {
   display: block;
   width: 100%;
   height: 100%;
@@ -868,7 +870,7 @@ body[data-doc="config"] .activite__gelule {
   background: var(--gray);
 }
 
-body[data-doc="config"] .activite__gelule::before {
+:is(body[data-doc="config"], body[data-doc="certificat"]) .activite__gelule::before {
   content: "";
   position: absolute;
   top: calc(var(--bord) + var(--marge));
@@ -880,17 +882,27 @@ body[data-doc="config"] .activite__gelule::before {
   transition: transform 180ms ease;
 }
 
-body[data-doc="config"] .activite__piste input:checked + .activite__gelule::before {
+:is(body[data-doc="config"], body[data-doc="certificat"]) .activite__piste input:checked + .activite__gelule::before {
   transform: translateX(calc(var(--gelule) - 2 * var(--bord) - 2 * var(--marge) - 100%));
 }
 
-body[data-doc="config"] .activite__piste input:focus-visible + .activite__gelule {
+:is(body[data-doc="config"], body[data-doc="certificat"]) .activite__piste input:focus-visible + .activite__gelule {
   outline: 3px solid var(--ink);
   outline-offset: 2px;
 }
 
+:is(body[data-doc="config"], body[data-doc="certificat"]) .ordre-langues span {
+  color: var(--muted);
+}
+
+:is(body[data-doc="config"], body[data-doc="certificat"]) .ordre-langues:has(input:not(:checked)) #ordre-recto,
+:is(body[data-doc="config"], body[data-doc="certificat"]) .ordre-langues:has(input:checked) #ordre-fin {
+  color: var(--ink);
+  font-weight: 700;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  body[data-doc="config"] .activite__gelule::before {
+  :is(body[data-doc="config"], body[data-doc="certificat"]) .activite__gelule::before {
     transition: none;
   }
 }
@@ -1415,6 +1427,10 @@ body[data-doc="certificat"] .toolbar h1 {
   letter-spacing: 0.02em;
   line-height: 1.15;
   text-transform: uppercase;
+}
+
+body[data-doc="certificat"] .ordre-langues {
+  margin: 0 0 0.9rem;
 }
 
 body[data-doc="certificat"] .json-form {
