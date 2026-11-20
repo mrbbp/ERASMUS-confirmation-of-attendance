@@ -47,3 +47,10 @@ Bien sûr c'est vibecodé (avec Grok sur cursoria).
 ----
 **Le bilinguisme (ce que dit la loi) :**
 > Une attestation délivrée par un établissement public français est un document officiel. En l'absence de version française, l'établissement ne dispose pas de version juridiquement authentique de son propre acte, ce qui crée une insécurité en cas de contrôle (agence nationale, corps d'inspection, contentieux) ou de litige sur les dates ou les crédits figurant au document. La version française est donc la version de droit, et la version anglaise une traduction de facilité destinée au partenaire étranger. L'article 3 de la loi Toubon prévoit toutefois une exception pour les documents « destinés à des étrangers », ce qui tempère la portée de l'obligation pour les attestations adressées exclusivement à des établissements étrangers ( [loi n° 94-665, Légifrance](https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000349929)).
+
+Update :
+---
+- Ordre des certificats. Une gélule choisit entre « recto/verso bilingue » et « Français en fin de document ». Le premier est le réglage par défaut : page anglaise, puis page française, pour chaque personne. Le second groupe toutes les pages françaises à la fin. La gélule est sur la configuration, à côté de « Générer les certificats », et sur la page des certificats, au-dessus du choix de fichier. Le choix est enregistré dans le JSON (ordreLangues) et dans le navigateur. Ouverte depuis la configuration, la page des certificats reprend ce choix.
+- Ordre des personnes. À l’enregistrement du JSON, la liste est classée par établissement, puis enseignants avant étudiants, puis par nom (cela fait sens pour la découpe des pdf pour la ventilation par établissement. Le tableau à l’écran n’est pas réordonné.
+- Page française. Le nom du·de la proviseur·e, le code Erasmus et l’OID n’y figurent plus. Ils restent sur la page anglaise.
+- Nom du BIP reste en place au rechargement de la configuration, comme les autres infos.
