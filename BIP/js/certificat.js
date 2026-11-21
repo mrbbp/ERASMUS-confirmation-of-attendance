@@ -1,5 +1,11 @@
 (() => {
-  // Pays du programme Erasmus+ en 2026. GB et CH restent hors table.
+  const { t, isFr: IS_FR } = window.BipLang;
+  const DEFAULT_STATE_LOGO = "medias/logo_republique-francaise.svg";
+  const DEFAULT_HOST_LOGO = "medias/logo_breq.svg";
+  const DROP_HINT = t("dropJson");
+  const TITRE_EN_DEFAUT = "legal representative";
+  const TITRE_FR_DEFAUT = "le responsable légal";
+
   const PAYS_EN = {
     AT: "Austria",
     BE: "Belgium",
@@ -104,6 +110,21 @@
     "Dec.",
   ];
 
+  const MONTHS_FR_SHORT = [
+    "janv.",
+    "févr.",
+    "mars",
+    "avr.",
+    "mai",
+    "juin",
+    "juil.",
+    "août",
+    "sept.",
+    "oct.",
+    "nov.",
+    "déc.",
+  ];
+
   const MONTH_INDEX = Object.fromEntries(
     MONTHS_EN.flatMap((name, index) => {
       const short = MONTHS_EN_SHORT[index].replace(/\.$/, "").toLowerCase();
@@ -115,25 +136,20 @@
     }),
   );
 
-  const ORDRE_RECTO = "recto-verso";
-  const ORDRE_FIN = "vf-fin";
-  const ORDRE_KEY = "bip-ordre-langues";
-  const form = document.querySelector("#json-form");
-  const ordreLangues = document.querySelector("#ordre-langues");
-  let configChargee = null;
-  const jsonFile = document.querySelector("#json-file");
-  const statut = document.querySelector("#statut");
-  const main = document.querySelector("#certificats");
-  const genererPdf = document.querySelector("#generer-pdf");
-  const vide = document.querySelector("#vide");
-  const modele = document.querySelector("#modele-certificat");
-
   function isObject(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value);
   }
 
   function asText(value) {
     return typeof value === "string" ? value.trim() : "";
+  }
+
+  function asCity(raw) {
+    if (!isObject(raw)) {
+      return "";
+    }
+    const city = asText(raw.city) || asText(raw.ville);
+    return city === "undefined" ? "" : city;
   }
 
   function asDate(value) {
@@ -174,21 +190,6 @@
   function formatOrdinalShortEn(plain) {
     return `${ordinalEn(plain.day)} ${MONTHS_EN_SHORT[plain.month - 1]} ${plain.year}`;
   }
-
-  const MONTHS_FR_SHORT = [
-    "janv.",
-    "févr.",
-    "mars",
-    "avr.",
-    "mai",
-    "juin",
-    "juil.",
-    "août",
-    "sept.",
-    "oct.",
-    "nov.",
-    "déc.",
-  ];
 
   function formatShortFr(plain) {
     const day = plain.day === 1 ? "1er" : String(plain.day);
@@ -285,10 +286,10 @@
     el.textContent = asText(value);
   }
 
-  function safeLogoPath(path) {
+  function safeLogoPath(path, fallback) {
     const text = asText(path);
     if (!text || text.includes("..") || text.startsWith("/") || /^[a-z]+:/i.test(text)) {
-      return "medias/logo_breq.svg";
+      return fallback;
     }
 
     return text;
@@ -303,12 +304,25 @@
     return table[code.toUpperCase()] || "";
   }
 
+  function fill(node, selector, text) {
+    const el = node.querySelector(selector);
+    if (el) {
+      el.textContent = text;
+    }
+  }
+
+  function fillAll(node, selector, text) {
+    node.querySelectorAll(selector).forEach((el) => {
+      el.textContent = text;
+    });
+  }
+
   function fillAffiliation(article, personne, lang) {
-    const prefix = personne.role === "enseignant"
+    const prefix = personne.role === "teacher"
       ? (lang === "fr" ? "enseignant accompagnateur de" : "accompanying teacher of")
       : (lang === "fr" ? "étudiant de" : "student of");
-    const school = personne.etablissementEnvoi || "";
-    const country = paysNom(personne.pays, lang);
+    const school = personne.sendingInstitution || "";
+    const country = paysNom(personne.country, lang);
     const schoolNode = article.querySelector(".etablissement-envoi");
     const countryNode = article.querySelector(".pays-en");
 
@@ -331,33 +345,185 @@
     }
   }
 
+  function titreFrSansArticle(titre) {
+    return titre.replace(/^(?:l[ea]|l['’])\s+/i, "").replace(/^l['’]/i, "");
+  }
+
+  function titreEnAvecThe(titre) {
+    return /^the\s/i.test(titre) ? titre : `the ${titre}`;
+  }
+
+  function fillCodes(article, data, lang) {
+    const codes = article.querySelector(".codes");
+    if (!codes) {
+      return;
+    }
+
+    const erasmus = asText(data.codeErasmus);
+    const oid = asText(data.oid);
+    const erasmusLine = codes.querySelector(".code-erasmus-ligne");
+    const oidLine = codes.querySelector(".oid-ligne");
+    const br = codes.querySelector("br");
+
+    if (erasmus) {
+      fill(codes, ".code-erasmus", erasmus);
+      fill(codes, ".code-label", lang === "fr" ? "Code Erasmus " : "Erasmus code ");
+    } else {
+      erasmusLine?.remove();
+      br?.remove();
+    }
+
+    if (oid) {
+      fill(codes, ".oid", oid);
+    } else {
+      oidLine?.remove();
+      br?.remove();
+    }
+
+    if (!erasmus && !oid) {
+      codes.remove();
+    }
+  }
+
+  function fillSignataire(article, data, lang) {
+    const signataire = article.querySelector(".signataire");
+    const codes = article.querySelector(".codes");
+
+    if (!IS_FR) {
+      signataire?.remove();
+      codes?.remove();
+      return;
+    }
+
+    const nom = asText(data.legalRepresentative);
+    const host = asText(data.host);
+    const titreEn = asText(data.titreEn) || TITRE_EN_DEFAUT;
+    const titreFr = asText(data.titreFr) || TITRE_FR_DEFAUT;
+
+    if (!signataire) {
+      fillCodes(article, data, lang);
+      return;
+    }
+
+    if (data.delegation) {
+      signataire.classList.add("delegation");
+      signataire.textContent = lang === "fr"
+        ? `Pour ${titreFr} et par délégation, ${nom}`
+        : `For ${titreEnAvecThe(titreEn)} and by delegation, ${nom}`;
+    } else if (lang === "fr") {
+      signataire.textContent = `${nom}, ${titreFrSansArticle(titreFr)} du ${host}`;
+    } else {
+      signataire.textContent = `${nom}, ${titreEn} of ${host}`;
+    }
+
+    fillCodes(article, data, lang);
+  }
+
+  function applyFrancais(article, data) {
+    fill(article, "h2", "pour conformité");
+    article.querySelector(".cachet")?.remove();
+    article.querySelector(".corps")?.setAttribute("aria-label", "pour conformité");
+    fill(article, ".intro", "Nous confirmons que");
+    fill(article, ".lieu-avant", "au ");
+    fill(article, ".periode-avant", "du ");
+    fill(article, ".periode-entre", " au ");
+    fill(article, ".ects-avant", "Le nombre de crédits attribués est de ");
+    fill(article, ".ects-entre", " et la formation a été ");
+    fill(article, ".acheve", "suivie avec succès");
+    fill(article, ".virtuelle-avant", "La composante virtuelle a eu lieu le ");
+    const city = asText(data.city);
+    fill(article, ".lieu-apres", city ? `, ${city}, France` : ", France");
+    const zones = article.querySelectorAll(".zone");
+    zones[0]?.setAttribute("aria-label", "Cachet de l’établissement");
+    zones[1]?.setAttribute("aria-label", "Signature");
+    const etat = article.querySelector(".logo-etat");
+    if (etat) {
+      etat.alt = "République française";
+    }
+    const ue = article.querySelector(".logo-ue");
+    if (ue) {
+      ue.alt = "Union européenne";
+    }
+  }
+
   function normalizePersonne(raw) {
     if (!isObject(raw)) {
       return null;
     }
 
-    const nom = asText(raw.nom);
-    if (!nom) {
+    const familyName = asText(raw.familyName) || asText(raw.nom);
+    if (!familyName) {
       return null;
     }
 
+    const role = asText(raw.role);
+    const teacher = role === "teacher" || role === "enseignant";
+
     return {
-      nom,
-      prenom: asText(raw.prenom),
-      pays: asText(raw.pays) || null,
-      etablissementEnvoi: asText(raw.etablissementEnvoi) || null,
-      role: raw.role === "enseignant" ? "enseignant" : "etudiant",
+      familyName,
+      givenName: asText(raw.givenName) || asText(raw.prenom),
+      country: asText(raw.country) || asText(raw.pays) || null,
+      sendingInstitution: asText(raw.sendingInstitution) || asText(raw.etablissementEnvoi) || null,
+      role: teacher ? "teacher" : "student",
+    };
+  }
+
+  function asTitle(raw) {
+    if (typeof raw.title === "string") {
+      return raw.title.trim();
+    }
+    if (typeof raw.bip === "string") {
+      return raw.bip.trim();
+    }
+    return "";
+  }
+
+  function asBipMention(raw) {
+    if (typeof raw.bip === "boolean") {
+      return raw.bip;
+    }
+    return raw.mentionBip !== false;
+  }
+
+  function frEtablissementFrom(raw) {
+    if (!isObject(raw)) {
+      return {
+        legalRepresentative: "",
+        titreFr: "",
+        titreEn: "",
+        delegation: false,
+        codeErasmus: "",
+        oid: "",
+      };
+    }
+
+    return {
+      legalRepresentative: asText(raw.legalRepresentative) || asText(raw.proviseur),
+      titreFr: asText(raw.titreFr),
+      titreEn: asText(raw.titreEn),
+      delegation: raw.delegation === true,
+      codeErasmus: asText(raw.codeErasmus),
+      oid: asText(raw.oid),
     };
   }
 
   function normalizeConfig(raw) {
-    if (!isObject(raw) || !Array.isArray(raw.personnes)) {
-      throw new Error("JSON invalide : objet avec un tableau personnes attendu.");
+    if (!isObject(raw)) {
+      throw new Error(t("invalidJson"));
     }
 
-    const personnes = raw.personnes.map(normalizePersonne).filter(Boolean);
-    if (!personnes.length) {
-      throw new Error("Aucune personne dans le JSON.");
+    const source = Array.isArray(raw.participants)
+      ? raw.participants
+      : Array.isArray(raw.personnes)
+        ? raw.personnes
+        : null;
+    if (!source) {
+      throw new Error(t("invalidJson"));
+    }
+
+    const participants = source.map(normalizePersonne).filter(Boolean);
+    if (!participants.length) {
+      throw new Error(t("noParticipants"));
     }
 
     let ects = null;
@@ -368,156 +534,135 @@
     }
 
     return {
-      bip: asText(raw.bip),
+      version: "v2",
+      title: asTitle(raw),
       ects,
-      mentionBip: raw.mentionBip !== false,
-      dateDebut: asDate(raw.dateDebut),
-      dateFin: asDate(raw.dateFin),
-      dateVirtuelle: asDate(raw.dateVirtuelle),
-      lycee: asText(raw.lycee),
-      logoLycee: safeLogoPath(raw.logoLycee),
-      proviseur: asText(raw.proviseur),
-      codeErasmus: asText(raw.codeErasmus),
-      oid: asText(raw.oid),
-      personnes,
+      bip: asBipMention(raw),
+      startDate: asDate(raw.startDate) || asDate(raw.dateDebut),
+      endDate: asDate(raw.endDate) || asDate(raw.dateFin),
+      virtualDate: asDate(raw.virtualDate) || asDate(raw.dateVirtuelle),
+      host: asText(raw.host) || asText(raw.lycee),
+      city: asCity(raw),
+      logo: safeLogoPath(raw.logo || raw.logoLycee, DEFAULT_HOST_LOGO),
+      stateLogo: safeLogoPath(raw.stateLogo, DEFAULT_STATE_LOGO),
+      ...frEtablissementFrom(raw),
+      participants,
     };
   }
 
-  function ordreDepuisJson(raw) {
+  function isV2(raw) {
+    return isObject(raw) && raw.version === "v2";
+  }
+
+  function normalizeEtablissement(raw) {
     if (!isObject(raw)) {
-      return null;
+      return {
+        version: "v2",
+        host: "",
+        city: "",
+        logo: "",
+        stateLogo: DEFAULT_STATE_LOGO,
+        ...frEtablissementFrom(null),
+      };
     }
-    if (raw.ordreLangues === ORDRE_FIN || raw.ordreLangues === ORDRE_RECTO) {
-      return raw.ordreLangues;
-    }
-    return null;
+
+    return {
+      version: "v2",
+      host: asText(raw.host) || asText(raw.lycee),
+      city: asCity(raw),
+      logo: asText(raw.logo) || asText(raw.logoLycee),
+      stateLogo: safeLogoPath(raw.stateLogo, DEFAULT_STATE_LOGO),
+      ...frEtablissementFrom(raw),
+    };
   }
 
-  function stockerOrdre(valeur) {
-    const ordre = valeur === ORDRE_FIN ? ORDRE_FIN : ORDRE_RECTO;
-    ordreLangues.checked = ordre === ORDRE_FIN;
-    try {
-      localStorage.setItem(ORDRE_KEY, ordre);
-    } catch (error) {
-      statut.textContent = "Le navigateur refuse d’enregistrer l’ordre des langues.";
-    }
-  }
-
-  function ordreCourant() {
-    return ordreLangues.checked ? ORDRE_FIN : ORDRE_RECTO;
-  }
-
-  function fill(node, selector, text) {
-    const el = node.querySelector(selector);
-    if (el) {
-      el.textContent = text;
-    }
-  }
-
-  function fillAll(node, selector, text) {
-    node.querySelectorAll(selector).forEach((el) => {
-      el.textContent = text;
-    });
-  }
-
-  function applyFrancais(article) {
-    fill(article, "h2", "pour archive");
-    article.querySelector(".corps")?.setAttribute("aria-label", "pour archive");
-    fill(article, ".intro", "Nous confirmons que");
-    fill(article, ".lieu-avant", "au ");
-    fill(article, ".lieu-apres", ", Rennes, France");
-    fill(article, ".periode-avant", "du ");
-    fill(article, ".periode-entre", " au ");
-    fill(article, ".ects-avant", "Le nombre de crédits attribués est de ");
-    fill(article, ".ects-entre", " et la formation a été ");
-    fill(article, ".acheve", "suivie avec succès");
-    fill(article, ".virtuelle-avant", "La composante virtuelle a eu lieu le ");
-    article.querySelector(".signataire")?.remove();
-    article.querySelector(".codes")?.remove();
-    const zones = article.querySelectorAll(".zone");
-    zones[0]?.setAttribute("aria-label", "Cachet de l’établissement");
-    zones[1]?.setAttribute("aria-label", "Signature");
-    const republique = article.querySelector("img[src$='logo_republique-francaise.svg']");
-    if (republique) {
-      republique.alt = "République française";
-    }
-    const ue = article.querySelector(".logo-ue");
-    if (ue) {
-      ue.alt = "Union européenne";
-    }
-  }
-
-  function renderCertificat(data, personne, lang) {
+  function renderCertificat(modele, data, personne, lang) {
     const article = modele.content.firstElementChild.cloneNode(true);
     const logo = article.querySelector(".logo-lycee");
+    const stateLogo = article.querySelector(".logo-etat");
     const ects = article.querySelector(".ects");
     const virtuelle = article.querySelector(".virtuelle");
     const francais = lang === "fr";
 
     article.lang = francais ? "fr" : "en";
     if (francais) {
-      applyFrancais(article);
+      applyFrancais(article, data);
     }
 
-    logo.src = data.logoLycee;
-    logo.alt = data.lycee || (francais ? "Établissement d’accueil" : "Host school");
+    const hostLogo = safeLogoPath(data.logo, DEFAULT_HOST_LOGO);
+    const republic = safeLogoPath(data.stateLogo, DEFAULT_STATE_LOGO);
 
-    const today = todayPlain();
-    fillTime(article, ".date-jour", toIsoDate(today), lang);
+    if (logo) {
+      logo.src = hostLogo;
+      logo.alt = data.host || (francais ? "Établissement d’accueil" : "Host HEI");
+    }
 
-    fill(article, ".prenom", personne.prenom);
-    fill(article, ".patronyme", personne.nom);
-    fillAffiliation(article, personne, lang);
-    fill(article, ".participation", francais
-      ? (data.mentionBip ? "a participé au workshop Erasmus+ BIP" : "a participé au workshop Erasmus+")
-      : (data.mentionBip ? "has participated in the Erasmus+ BIP workshop" : "has participated in the Erasmus+ workshop"));
-    fill(article, ".bip", data.bip);
-    fillAll(article, ".etablissement", data.lycee);
-    fillTime(article, ".date-debut", data.dateDebut, lang);
-    fillTime(article, ".date-fin", data.dateFin, lang);
-    if (!francais) {
-      fill(article, ".proviseur", data.proviseur);
-      fill(article, ".code-erasmus", data.codeErasmus);
-      fill(article, ".oid", data.oid);
-      if (!data.codeErasmus && !data.oid) {
-        article.querySelector(".codes")?.remove();
+    if (stateLogo) {
+      stateLogo.src = republic;
+      if (!francais) {
+        stateLogo.alt = republic === DEFAULT_STATE_LOGO ? "French Republic" : "Logo";
+      } else if (republic !== DEFAULT_STATE_LOGO) {
+        stateLogo.alt = "Logo";
       }
     }
 
-    if (personne.role === "etudiant" && data.ects) {
+    fillTime(article, ".date-jour", toIsoDate(todayPlain()), lang);
+    fill(article, ".prenom", personne.givenName);
+    fill(article, ".patronyme", personne.familyName);
+    fillAffiliation(article, personne, lang);
+    fill(article, ".participation", francais
+      ? (data.bip ? "a participé au workshop Erasmus+ BIP" : "a participé au workshop Erasmus+")
+      : (data.bip
+        ? "has participated in the Erasmus+ BIP workshop"
+        : "has participated in the Erasmus+ workshop"));
+    fill(article, ".bip", data.title);
+    fillAll(article, ".etablissement", data.host);
+    if (!francais) {
+      fill(article, ".ville-date", data.city ? `, ${data.city}` : "");
+      fill(article, ".lieu-apres", data.city ? `, ${data.city}, France` : ", France");
+    } else {
+      fill(article, ".ville-date", data.city ? `, ${data.city}` : "");
+    }
+    fillTime(article, ".date-debut", data.startDate, lang);
+    fillTime(article, ".date-fin", data.endDate, lang);
+    fillSignataire(article, data, lang);
+
+    if (personne.role === "student" && data.ects) {
       fill(article, ".ects-valeur", `${data.ects} ECTS`);
     } else {
-      ects.remove();
+      ects?.remove();
     }
 
-    if (data.dateVirtuelle) {
-      fillTime(article, ".date-virtuelle", data.dateVirtuelle, lang);
+    if (data.virtualDate) {
+      fillTime(article, ".date-virtuelle", data.virtualDate, lang);
     } else {
-      virtuelle.remove();
+      virtuelle?.remove();
     }
 
-    const nom = [personne.prenom, personne.nom].filter(Boolean).join(" ");
-    const titre = francais ? "pour archive" : "Confirmation of attendance";
+    const nom = [personne.givenName, personne.familyName].filter(Boolean).join(" ");
+    const titre = francais ? "pour conformité" : "Confirmation of attendance";
     article.setAttribute("aria-label", `${titre} — ${nom}`);
 
     return article;
   }
 
-  // Colle chaque baseline sur le filet suivant. Pas = line-height du labeur.
-  function alignBaselines() {
-    const articles = main.querySelectorAll("article");
+  function alignBaselines(container) {
+    const articles = container.querySelectorAll("article");
     if (!articles.length) {
       return;
     }
 
-    const step = parseFloat(getComputedStyle(articles[0]).lineHeight);
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    if (!step || !rem) {
+    if (!rem) {
       return;
     }
 
     articles.forEach((article) => {
       const articleStyle = getComputedStyle(article);
+      const step = parseFloat(articleStyle.lineHeight);
+      if (!step) {
+        return;
+      }
       const origin = article.getBoundingClientRect().top + (parseFloat(articleStyle.borderTopWidth) || 0);
       const footer = article.querySelector(":scope > footer");
       const blocks = [...article.querySelectorAll("h2, p")].filter((block) => !footer?.contains(block));
@@ -593,43 +738,65 @@
     });
   }
 
-  function render(data) {
-    configChargee = data;
-    const fragment = document.createDocumentFragment();
-    const fin = ordreCourant() === ORDRE_FIN;
-    if (fin) {
-      data.personnes.forEach((personne) => {
-        fragment.append(renderCertificat(data, personne, "en"));
-      });
-      data.personnes.forEach((personne) => {
-        fragment.append(renderCertificat(data, personne, "fr"));
-      });
-    } else {
-      data.personnes.forEach((personne) => {
-        fragment.append(renderCertificat(data, personne, "en"));
-        fragment.append(renderCertificat(data, personne, "fr"));
-      });
+  function renderCertificates(container, data) {
+    const modele = document.querySelector("#modele-certificat");
+    if (!modele || !container) {
+      return;
     }
 
-    main.replaceChildren(fragment);
-    genererPdf.hidden = depuisConfig;
-    document.title = `Confirmation of attendance — ${data.bip}`;
-    const n = data.personnes.length;
-    const ordre = fin
-      ? "Versions françaises en fin de document."
-      : "Anglais au recto, français au verso.";
-    statut.textContent = `${n} personne${n > 1 ? "s" : ""} — ${data.bip}. ${ordre}`;
-    document.fonts.ready.then(alignBaselines);
+    const fragment = document.createDocumentFragment();
+    data.participants.forEach((personne) => {
+      fragment.append(renderCertificat(modele, data, personne, "en"));
+      if (IS_FR) {
+        fragment.append(renderCertificat(modele, data, personne, "fr"));
+      }
+    });
+
+    container.replaceChildren(fragment);
+    container.hidden = false;
+    document.title = data.title
+      ? t("certTitleNamed", { title: data.title })
+      : t("certTitle");
+    document.fonts.ready.then(() => {
+      requestAnimationFrame(() => alignBaselines(container));
+    });
   }
 
-  function showEmpty(message) {
-    configChargee = null;
-    const p = vide.cloneNode(true);
-    p.id = "vide";
-    p.textContent = message;
-    main.replaceChildren(p);
-    genererPdf.hidden = true;
-    document.title = "Confirmation of attendance";
+  window.BipEn = {
+    DEFAULT_STATE_LOGO,
+    DEFAULT_HOST_LOGO,
+    MONTHS_EN,
+    isObject,
+    isV2,
+    asText,
+    safeLogoPath,
+    frEtablissementFrom,
+    normalizeConfig,
+    normalizeEtablissement,
+    renderCertificates,
+    alignBaselines,
+  };
+
+  const form = document.querySelector("#json-form");
+  if (!form) {
+    return;
+  }
+
+  const jsonFile = document.querySelector("#json-file");
+  const dropZone = document.querySelector("#json-drop-zone");
+  const dropText = document.querySelector("#json-drop-text");
+  const main = document.querySelector("#certificats");
+  const grille = document.querySelector("#grille");
+
+  function setDropMessage(message, isError) {
+    if (dropText) {
+      dropText.textContent = message;
+    }
+    dropZone?.classList.toggle("is-error", Boolean(isError));
+    if (jsonFile) {
+      jsonFile.setCustomValidity(isError ? message : "");
+      jsonFile.setAttribute("aria-invalid", isError ? "true" : "false");
+    }
   }
 
   function readJsonFile(file) {
@@ -639,8 +806,7 @@
 
     const namedJson = file.type === "application/json" || /\.json$/i.test(file.name);
     if (!namedJson) {
-      jsonFile.setCustomValidity("Choisissez un fichier JSON.");
-      jsonFile.reportValidity();
+      setDropMessage(t("chooseJson"), true);
       return;
     }
 
@@ -649,35 +815,22 @@
       try {
         const parsed = JSON.parse(String(reader.result));
         const data = normalizeConfig(parsed);
-        const ordre = ordreDepuisJson(parsed);
-        if (ordre) {
-          stockerOrdre(ordre);
-        }
-        jsonFile.setCustomValidity("");
-        render(data);
+        setDropMessage(DROP_HINT, false);
+        renderCertificates(main, data);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "JSON illisible.";
-        jsonFile.setCustomValidity(message);
-        jsonFile.reportValidity();
-        showEmpty(message);
-        statut.textContent = message;
+        const message = error instanceof Error ? error.message : t("unreadableJson");
+        setDropMessage(message, true);
+        main.replaceChildren();
+        document.title = t("certTitle");
       }
     });
     reader.addEventListener("error", () => {
-      const message = "Lecture du fichier impossible.";
-      jsonFile.setCustomValidity(message);
-      jsonFile.reportValidity();
-      statut.textContent = message;
+      setDropMessage(t("fileUnreadable"), true);
     });
     reader.readAsText(file);
   }
 
-  genererPdf.addEventListener("click", () => {
-    window.print();
-  });
-
   jsonFile.addEventListener("change", () => {
-    jsonFile.setCustomValidity("");
     readJsonFile(jsonFile.files?.[0]);
   });
 
@@ -706,60 +859,13 @@
     const transfer = new DataTransfer();
     transfer.items.add(file);
     jsonFile.files = transfer.files;
-    jsonFile.setCustomValidity("");
     readJsonFile(file);
   });
 
-  try {
-    ordreLangues.checked = localStorage.getItem(ORDRE_KEY) === ORDRE_FIN;
-  } catch (error) {
-    ordreLangues.checked = false;
-  }
+  window.addEventListener("beforeprint", () => alignBaselines(main));
+  window.addEventListener("afterprint", () => alignBaselines(main));
 
-  ordreLangues.addEventListener("change", () => {
-    stockerOrdre(ordreCourant());
-    if (configChargee) {
-      render(configChargee);
-    }
-  });
-
-  const parametres = new URLSearchParams(window.location.search);
-  if (parametres.has("reset")) {
-    sessionStorage.removeItem("bip-certificat-config");
-  }
-  const depuisConfig = !parametres.has("reset") && parametres.get("depuis") === "config";
-  if (!depuisConfig) {
-    sessionStorage.removeItem("bip-certificat-config");
-  }
-  if (depuisConfig) {
-    form.hidden = true;
-    const memorise = sessionStorage.getItem("bip-certificat-config");
-    if (memorise) {
-      try {
-        const parsed = JSON.parse(memorise);
-        const ordre = ordreDepuisJson(parsed);
-        if (ordre) {
-          stockerOrdre(ordre);
-        }
-        render(normalizeConfig(parsed));
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "JSON illisible.";
-        form.hidden = false;
-        showEmpty(message);
-        statut.textContent = message;
-      }
-    } else {
-      form.hidden = false;
-      showEmpty("Aucune liste enregistrée dans cet onglet.");
-      statut.textContent = "Aucune liste enregistrée dans cet onglet.";
-    }
-  }
-
-  window.addEventListener("beforeprint", alignBaselines);
-  window.addEventListener("afterprint", alignBaselines);
-
-  const grille = document.querySelector("#grille");
-  grille.addEventListener("click", () => {
+  grille?.addEventListener("click", () => {
     const visible = document.body.classList.toggle("is-grille");
     grille.setAttribute("aria-pressed", visible ? "true" : "false");
   });

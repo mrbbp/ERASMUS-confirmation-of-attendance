@@ -1,21 +1,22 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BIP — certificats de présence</title>
+    <title>BIP — confirmation of attendance</title>
     <link rel="stylesheet" href="css/print.css">
+    <script src="js/langue.js" defer></script>
   </head>
-  <body data-doc="config">
-    <header>
+  <body data-doc="config" data-i18n-title="indexTitle">
+    <header class="site">
       <h1>BIP</h1>
-      <p class="lede">Préparer la liste, puis composer les confirmations de présence.</p>
+      <p class="lede" data-i18n="indexLede">Prepare the list, then compose the confirmations of attendance.</p>
     </header>
     <main>
-      <nav aria-label="Outils">
+      <nav data-i18n-aria-label="navTools" aria-label="Tools">
         <ul>
-          <li><a href="config.html">Configuration</a> — liste, dates, logo, fichier JSON.</li>
-          <li><a href="certificat.html">Certificats</a> — une page A4 par personne à partir du JSON.</li>
+          <li><a href="config.html" data-i18n="navConfig">Configuration</a><span data-i18n="navConfigDesc"> — list, dates, logos, JSON file.</span></li>
+          <li><a href="certificat.html" data-i18n="navCert">Certificates</a><span data-i18n="navCertDesc"> — one A4 page per person from a JSON file.</span></li>
         </ul>
       </nav>
     </main>

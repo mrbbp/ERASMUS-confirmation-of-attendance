@@ -5,50 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Confirmation of attendance</title>
     <link rel="stylesheet" href="css/print.css">
+    <script src="js/langue.js" defer></script>
     <script src="js/certificat.js" defer></script>
   </head>
-  <body class="is-grille" data-doc="certificat">
+  <body class="is-grille" data-doc="certificat" data-page="print" data-i18n-title="certTitle">
     <button type="button" class="grille" id="grille" aria-pressed="true">
       <svg viewBox="0 0 16 16" aria-hidden="true">
         <path d="M1 4h14M1 8h14M1 12h14"></path>
       </svg>
-      Grille
+      <span data-i18n="grid">Grid</span>
     </button>
-    <header class="toolbar" lang="fr">
-      <h1>Certificats de présence</h1>
-      <div class="activite__switch ordre-langues">
-        <span id="ordre-recto">recto/verso bilingue</span>
-        <label class="activite__piste">
-          <input id="ordre-langues" name="ordreLangues" type="checkbox" role="switch" autocomplete="off" aria-labelledby="ordre-recto ordre-fin">
-          <span class="activite__gelule" aria-hidden="true"></span>
-        </label>
-        <span id="ordre-fin">Français en fin de document</span>
-      </div>
-      <form class="json-form" id="json-form" action="#" method="get">
-        <label for="json-file">Fichier JSON</label>
+
+    <form class="json-drop" id="json-form" action="#" method="get">
+      <label class="json-drop__zone" id="json-drop-zone" for="json-file">
+        <span id="json-drop-text" data-i18n="dropJson">Drop a JSON file here, or click to choose one.</span>
         <input id="json-file" name="json" type="file" accept="application/json,.json" required>
-        <p class="hint" id="json-help">Choisir le JSON téléchargé depuis la configuration, ou le déposer ici. Deux pages A4 par personne.</p>
-        <p class="status" id="statut" role="status">Aucun JSON chargé.</p>
-      </form>
-    </header>
+      </label>
+    </form>
 
-    <button type="button" class="pdf" id="generer-pdf" hidden>Générer les PDF</button>
-
-    <main id="certificats">
-      <p class="vide" id="vide">Chargez un JSON pour composer les confirmations de présence.</p>
-    </main>
-
-    <footer class="colophon" lang="fr">
-      <p>Alignement sur la grille de ligne de base inspiré du travail de <a href="https://julie-blanc.fr/">Julie Blanc</a> pour <a href="https://pagedjs.org/">paged.js</a>.</p>
-      <p>vibecodé par <a href="mailto:ecb@dnmd.lv">écb</a> + Grok sur cursorai</p>
-    </footer>
+    <main id="certificats"></main>
 
     <template id="modele-certificat">
-      <article>
+      <article lang="en">
         <header>
           <ul class="logos" role="list">
             <li>
-              <img src="medias/logo_republique-francaise.svg" width="85" height="77" alt="French Republic">
+              <img class="logo-etat" src="medias/logo_republique-francaise.svg" width="85" height="77" alt="French Republic">
             </li>
             <li>
               <img class="logo-lycee" src="medias/logo_breq.svg" height="40" alt="">
@@ -60,7 +42,7 @@
               <img class="logo-erasmus" src="medias/logo_erasmus.svg" width="124" height="29" alt="Erasmus+">
             </li>
           </ul>
-          <p class="lieu-date"><time class="date-jour"></time>, Rennes</p>
+          <p class="lieu-date"><time class="date-jour"></time><span class="ville-date"></span></p>
           <h2>Confirmation of attendance</h2>
         </header>
 
@@ -70,19 +52,16 @@
           <p class="affiliation"><span class="role-prefix"></span> <span class="etablissement-envoi"></span><span class="pays-en"></span></p>
           <p class="participation">has participated in the Erasmus+ BIP workshop</p>
           <p class="bip"></p>
-          <p class="lieu-accueil"><span class="lieu-avant">at </span><span class="etablissement"></span><span class="lieu-apres">, Rennes, France</span></p>
+          <p class="lieu-accueil"><span class="lieu-avant">at </span><span class="etablissement"></span><span class="lieu-apres"></span></p>
           <p class="periode"><span class="periode-avant">from </span><time class="date-debut"></time><span class="periode-entre"> to </span><time class="date-fin"></time></p>
           <p class="ects"><span class="ects-avant">The number of credits awarded is </span><strong class="ects-valeur">3 ECTS</strong><span class="ects-entre"> and the course has been </span><strong class="acheve">successfully completed</strong></p>
           <p class="virtuelle"><span class="virtuelle-avant">The virtual component took place on </span><time class="date-virtuelle"></time></p>
         </section>
 
         <footer>
-          <p class="signataire"><span class="proviseur"></span><span class="signataire-fonction">, Headmaster of </span><span class="etablissement"></span></p>
-          <p class="codes"><span class="code-label">Erasmus code </span><span class="code-erasmus"></span><br><span class="oid-label">OID </span><span class="oid"></span></p>
-          <ul class="zones">
-            <li class="zone" aria-label="School stamp"></li>
-            <li class="zone" aria-label="Signature"></li>
-          </ul>
+          <p class="cachet">stamp and signature</p>
+          <p class="signataire"></p>
+          <p class="codes"><span class="code-erasmus-ligne"><span class="code-label">Erasmus code </span><span class="code-erasmus"></span></span><br><span class="oid-ligne"><span class="oid-label">OID </span><span class="oid"></span></span></p>
         </footer>
       </article>
     </template>
