@@ -87,7 +87,7 @@ Le certificat est en anglais seulement : une page A4 par personne. Le pied de pa
 
 ## Français
 
-Les mêmes adresses (`index.html`, `config.html`, `certificat.html`). Deux pages A4 par personne, recto anglais puis verso français. Le titre du verso est **pour conformité**. Pas de ligne « cachet et signature » sur le verso. Les deux pages utilisent **Marianne** et la grille internat 1,5 rem (labeur 1 rem / 1,5 rem, titre 2 rem / 3 rem, nom 3 rem / 4,5 rem). La ligne « stamp and signature » reste sur le recto anglais seulement. Signataire et codes, s’ils sont remplis, s’impriment sur les deux pages.
+Les mêmes adresses (`index.html`, `config.html`, `certificat.html`). Deux pages A4 par personne, recto anglais puis verso français. Le titre du verso est **pour conformité**. Pas de ligne « cachet et signature » sur le verso. Les deux pages utilisent **Marianne** et une grille de 1,5 rem (labeur 1 rem / 1,5 rem, titre 2 rem / 3 rem, nom 3 rem / 4,5 rem). La ligne « stamp and signature » reste sur le recto anglais seulement. Signataire et codes, s’ils sont remplis, s’impriment sur les deux pages.
 
 Le bloc établissement ajoute un seul nom de signataire, les fonctions du responsable légal (français avec article, anglais sans), un interrupteur « signature par délégation », et un code Erasmus / OID facultatifs (annexe KA131). Les codes vides sont omis du JSON et de la page. Les codes imprimés sont en italique, comme « stamp and signature ».
 
@@ -103,7 +103,7 @@ Coller ensuite la liste des personnes (étudiants et enseignants accompagnateurs
 
 **Configurer** et **Générer** basculent les panneaux. Le bouton de la vue courante est grisé, inactif ; l’autre est l’action. La page s’ouvre sur le formulaire. **Générer** valide, télécharge un JSON horodaté (`version` : `v2`), puis affiche les pages A4 sur la même page. **Configurer** ramène alors le formulaire. **Grille** montre ou cache les filets de ligne de base. L’impression depuis cette vue masque le formulaire et les boutons.
 
-On peut déposer une liste `.txt` ou un JSON déjà exporté sur le champ liste. Le JSON recharge le titre, les dates et les personnes. Les champs établissement déjà saisis restent en place ; les vides prennent la valeur du JSON. Les anciens fichiers internat (`lycee`, `personnes`, `nom`, `prenom`, `proviseur`, `oid`) s’ouvrent encore.
+On peut déposer une liste `.txt` ou un JSON déjà exporté sur le champ liste. Le JSON recharge le titre, les dates et les personnes. Les champs établissement déjà saisis restent en place ; les vides prennent la valeur du JSON. Les anciens fichiers (v1) (`lycee`, `personnes`, `nom`, `prenom`, `proviseur`, `oid`) s’ouvrent encore.
 
 À l’enregistrement, le JSON classe par établissement, enseignants puis étudiants, puis par nom. Les clés vides sont omises, pas écrites comme chaînes vides.
 
@@ -117,7 +117,7 @@ Imprimer avec **Commande/Contrôle + P** pour obtenir un PDF, puis faire signer 
 
 Régler le type d’activité (**BIP** ou **Workshop**) ; les ECTS sont ajoutés sur les certificats étudiants (3 ou 1).
 
-La mise en page utilise une grille de ligne de base pour caler le texte. Les filets bleus ne s’impriment pas. L’alignement des bas de ligne suit le travail de [Julie Blanc](https://julie-blanc.fr/) pour [paged.js](https://pagedjs.org/).
+La mise en page utilise une grille de ligne de base pour caler le texte. Les filets bleus ne s’impriment pas. L’alignement sur la grille de ligne de base s'inspire du travail de [Julie Blanc](https://julie-blanc.fr/) pour [paged.js](https://pagedjs.org/).
 
 L’interface (formulaires, boutons, aide) utilise **Source Sans 3** (variable, version 3.052), SIL Open Font License, fournie dans `fonts/source-sans/`. En anglais, les A4 restent en Source Sans 3. L’interface française passe les A4 en Marianne (`fonts/marianne/`) et la grille internat.
 
