@@ -83,7 +83,7 @@ Le HTML est en anglais. Une couche française s’applique quand la langue activ
 
 ## Anglais (défaut)
 
-Le certificat est en anglais seulement : une page A4 par personne. Le pied de page est une seule ligne : stamp and signature. Police : **Source Sans 3**, ligne de base 1,375 rem (labeur 1 rem / 1,375 rem, titre 2 rem / 2,75 rem, nom 3 rem / 4,125 rem). Ni code Erasmus, ni OID, ni responsable légal à l’écran ou sur la page. La langue de l’interface fixe police et grille de tous les A4.
+Le certificat est en anglais seulement : une page A4 par personne. Le pied de page est une seule ligne : stamp and signature. Police : **Source Sans 3**, grille de ligne de base 1,375 rem (labeur 1 rem / 1,375 rem, titre 2 rem / 2,75 rem, nom 3 rem / 4,125 rem). Ni code Erasmus, ni OID, ni responsable légal à l’écran ou sur la page. La langue de l’interface fixe police et grille de tous les A4.
 
 ## Français
 
@@ -119,7 +119,7 @@ Régler le type d’activité (**BIP** ou **Workshop**) ; les ECTS sont ajoutés
 
 La mise en page utilise une grille de ligne de base pour caler le texte. Les filets bleus ne s’impriment pas. L’alignement des bas de ligne suit le travail de [Julie Blanc](https://julie-blanc.fr/) pour [paged.js](https://pagedjs.org/).
 
-L’interface (formulaires, boutons, aide) utilise **Source Sans 3** (variable, version 3.052), SIL Open Font License, fournie dans `fonts/source-sans/`. En anglais, les A4 restent en Source Sans 3. L’interface française passe les A4 en Marianne (`fonts/marianne/`) et la grille internat.
+L’interface (formulaires, boutons, aide) utilise **Source Sans 3** (variable, version 3.052), SIL Open Font License, fournie dans `fonts/source-sans/`. En anglais, les A4 restent en Source Sans 3. L’interface française passe les A4 en Marianne (`fonts/marianne/`) et la grille de ligne de base afférente.
 
 - Déposer des listes ou un JSON déjà exporté sur la page de configuration.
 - Trier le tableau à l’écran par pays, établissement, nom ou rôle. Ce tri ne réordonne pas le JSON ; le fichier suit l’ordre d’enregistrement ci-dessus.
