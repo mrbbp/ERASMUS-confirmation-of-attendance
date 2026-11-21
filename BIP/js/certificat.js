@@ -319,8 +319,8 @@
 
   function fillAffiliation(article, personne, lang) {
     const prefix = personne.role === "teacher"
-      ? (lang === "fr" ? "enseignant accompagnateur de" : "accompanying teacher of")
-      : (lang === "fr" ? "étudiant de" : "student of");
+      ? (lang === "fr" ? "enseignant·e accompagnateur·rice de" : "accompanying teacher of")
+      : (lang === "fr" ? "étudiant·e de" : "student of");
     const school = personne.sendingInstitution || "";
     const country = paysNom(personne.country, lang);
     const schoolNode = article.querySelector(".etablissement-envoi");
