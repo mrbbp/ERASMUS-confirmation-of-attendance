@@ -16,8 +16,39 @@
       // ignore
     }
 
-    const nav = String(navigator.language || "").toLowerCase();
-    return nav.startsWith("fr") ? "fr" : "en";
+    // Français seulement si la liste contient fr-FR et aucune autre région francophone.
+    // fr-BE, fr-LU, un fr seul et le reste restent en anglais.
+    return estFrancaisDeFrance(etiquettesLangue()) ? "fr" : "en";
+  }
+
+  function etiquettesLangue() {
+    const liste = navigator.languages;
+    if (liste && liste.length) {
+      return Array.from(liste);
+    }
+    return navigator.language ? [navigator.language] : [];
+  }
+
+  function estFrancaisDeFrance(tags) {
+    let regionFrance = false;
+    let autreRegion = false;
+    for (const tag of tags) {
+      let locale;
+      try {
+        locale = new Intl.Locale(tag);
+      } catch {
+        continue;
+      }
+      if (locale.language !== "fr" || !locale.region) {
+        continue;
+      }
+      if (locale.region === "FR") {
+        regionFrance = true;
+      } else {
+        autreRegion = true;
+      }
+    }
+    return regionFrance && !autreRegion;
   }
 
   const LANG = detectLang();
